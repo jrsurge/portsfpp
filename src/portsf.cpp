@@ -6,15 +6,15 @@
 //  A C++ wrapper around a modified version of portsf by Richard Dobson.
 //
 //  portsf++ was created because portsf doesn't have any C++ wrappers.
-//  portsf also internally manages the files, using a fixed length array - 
-//  a limit we can do without if the library relinquishes memory 
+//  portsf also internally manages the files, using a fixed length array -
+//  a limit we can do without if the library relinquishes memory
 //  management.
 //
-//  portsf++ uses RAII to ensure resources are properly allocated and 
+//  portsf++ uses RAII to ensure resources are properly allocated and
 //  cleared up, using portsf's original mechanisms
 //
-//  portsf++ also uses pimpl to shield the inner workings of portsf, 
-//  some of which are now exposed with the modifications made to the 
+//  portsf++ also uses pimpl to shield the inner workings of portsf,
+//  some of which are now exposed with the modifications made to the
 //  underlying library.
 //
 
@@ -32,7 +32,7 @@ namespace psf
     };
 
     SoundFile::SoundFile(const char* path)
-        : impl(new portsf_impl)
+        : impl(new portsf_impl), isClosed(false)
     {
         int error = psf_sndOpen(path, &impl->props, 0, &impl->file);
         if (impl->file == nullptr || error != PSF_E_NOERROR)
@@ -46,7 +46,7 @@ namespace psf
     }
 
     SoundFile::SoundFile(const char* path, const HeaderFormat headerFormat, const SampleFormat sampleFormat, const int numChannels, const int sampleRate)
-        : impl(new portsf_impl)
+        : impl(new portsf_impl), isClosed(false)
     {
         impl->props.chans = numChannels;
         impl->props.chformat = psf_channelformat::STDWAVE;
@@ -78,7 +78,7 @@ namespace psf
     }
 
     SoundFile::SoundFile(const char* path, const SoundFile& readHandle)
-        : impl(new portsf_impl)
+        : impl(new portsf_impl), isClosed(false)
     {
         if (readHandle.isValid())
         {
@@ -153,16 +153,22 @@ namespace psf
 
     void SoundFile::close()
     {
-        markAsInvalid();
+        // Make sure we only close things once
+        if(!isClosed)
+        {
+            markAsInvalid();
 
-        // Attempt to close and free the PSFFILE
-        int error = psf_sndClose(impl->file);
+            // Attempt to close and free the PSFFILE
+            int error = psf_sndClose(impl->file);
 
-        // portsf only frees the PSFFILE itself if it's valid
-        if (error != PSF_E_NOERROR)
-            free(impl->file); // PSFFILE GETS ALLOCATED WITH MALLOC IN PORTSF, USE FREE
+            // portsf only frees the PSFFILE itself if it's valid
+            if (error != PSF_E_NOERROR)
+                free(impl->file); // PSFFILE GETS ALLOCATED WITH MALLOC IN PORTSF, USE FREE
 
-        delete impl; // IMPL GETS ALLOCATED WITH NEW IN PORTSF++, USE DELETE
+            delete impl; // IMPL GETS ALLOCATED WITH NEW IN PORTSF++, USE DELETE
+
+            isClosed = true;
+        }
     }
 
     int SoundFile::numChannels() const
