@@ -1,6 +1,7 @@
 # portsf++
 
 A C++ wrapper around a modified version of portsf by Richard Dobson.
+portsf is a soundfile library, written in C - used by the Composers' Desktop Project
 
 portsf++ was created because portsf doesn't have any C++ wrappers.
 portsf also internally manages the files, using a fixed length array - 
