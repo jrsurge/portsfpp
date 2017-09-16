@@ -87,6 +87,8 @@ namespace psf
         int numFrames() const;
         // Returns the sample rate of the file
         int sampleRate() const;
+        // Returns the file path
+        const char* path() const;
 
         // Checks if this is a READ handle
         bool isRead() const;

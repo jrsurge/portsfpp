@@ -186,6 +186,11 @@ namespace psf
         return impl->props.srate;
     }
 
+    const char* SoundFile::path() const
+    {
+        return impl->file->filename;
+    }
+
     bool SoundFile::isRead() const
     {
         return m_handleType == HandleType::READ;
